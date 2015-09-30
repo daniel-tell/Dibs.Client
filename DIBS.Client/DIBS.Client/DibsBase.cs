@@ -19,7 +19,7 @@ namespace DIBS.Client
             var properties = GetType().GetProperties();
 
             var message = properties
-                .Where(property => !CheckIfIgnored(property))
+                .Where(property => !CheckIfIgnored(property) && property.GetValue(this) != null)
                 .OrderBy(property => property.GetNameWithDibsCasing(), StringComparer.Ordinal)
                 .Aggregate("", (msg, property) => msg + ("&" + property.GetNameWithDibsCasing() + "=" + property.GetValue(this)));
 
