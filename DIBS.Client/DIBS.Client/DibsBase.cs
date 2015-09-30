@@ -16,13 +16,12 @@ namespace DIBS.Client
 
         private string GenereatePostMessage()
         {
-            PropertyInfo[] propertyInfos = GetType().GetProperties();
+            var properties = GetType().GetProperties();
 
-            var message = propertyInfos
-                .Where(x => !CheckIfIgnored(x))
-                .ToDictionary(k => k, FixCasing)
-                .OrderBy(x => x.Value, StringComparer.Ordinal)
-                .Aggregate("", (current, propertyPair) => current + ("&" + propertyPair.Value + "=" + propertyPair.Key.GetValue(this)));
+            var message = properties
+                .Where(property => !CheckIfIgnored(property))
+                .OrderBy(property => property.GetNameWithDibsCasing(), StringComparer.Ordinal)
+                .Aggregate("", (msg, property) => msg + ("&" + property.GetNameWithDibsCasing() + "=" + property.GetValue(this)));
 
             if (message.Length > 0)
                 message = message.TrimStart('&');
@@ -56,11 +55,15 @@ namespace DIBS.Client
             return true;
         }
 
-        private static string FixCasing(PropertyInfo propertyInfo)
+    }
+
+    internal static class PropertyInfoExtension
+    {
+        internal static string GetNameWithDibsCasing(this PropertyInfo propertyInfo)
         {
             string name = propertyInfo.Name;
 
-            if (Attribute.IsDefined(propertyInfo, typeof (CamelCaseAttribute)))
+            if (Attribute.IsDefined(propertyInfo, typeof(CamelCaseAttribute)))
             {
                 var sb = new StringBuilder();
                 sb.Append(name[0].ToString().ToLower());
