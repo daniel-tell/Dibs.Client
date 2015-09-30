@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,18 +20,18 @@ namespace DIBS.Client
 
             PropertyInfo[] propertyInfos = GetType().GetProperties();
 
-            SortPropertiesByName(propertyInfos);
+            var propertiesWithFixedNames = propertyInfos
+                .Where(x => !CheckIfIgnored(x))
+                .ToDictionary(k => k, FixCasing)
+                .OrderBy(x => x.Value, StringComparer.Ordinal);
 
-            foreach (PropertyInfo propertyInfo in propertyInfos)
+            //SortPropertiesByName(propertyInfos.ToArray());
+
+            foreach (KeyValuePair<PropertyInfo, string> propertyPair in propertiesWithFixedNames)
             {
-                bool ignore = CheckIfIgnored(propertyInfo);
 
-                if (!ignore)
-                {
-                    string name = FixCasing(propertyInfo);
+                    message += "&" + propertyPair.Value + "=" + propertyPair.Key.GetValue(this);
 
-                    message += "&" + name + "=" + propertyInfo.GetValue(this);
-                }
             }
 
             if (message.Length > 0)
@@ -39,12 +40,21 @@ namespace DIBS.Client
             return message;
         }
 
-        private static void SortPropertiesByName(PropertyInfo[] propertyInfos)
-        {
-            Array.Sort(propertyInfos,
-                       (propertyInfo1, propertyInfo2) =>
-                       String.Compare(propertyInfo1.Name, propertyInfo2.Name, StringComparison.Ordinal));
-        }
+        //private static void SortPropertiesByName(Dictionary<PropertyInfo, string> propertyPairs)
+        //{
+            
+            
+        //    Array.Sort(propertyPairs,
+        //               (propertyInfo1, propertyInfo2) =>
+        //               String.Compare(propertyInfo1, propertyInfo2, StringComparison.Ordinal));
+        //}
+
+        //private static void SortPropertiesByName(PropertyInfo[] propertyInfos)
+        //{
+        //    Array.Sort(propertyInfos,
+        //               (propertyInfo1, propertyInfo2) =>
+        //               String.Compare(propertyInfo1.Name, propertyInfo2.Name, StringComparison.Ordinal));
+        //}
 
         private bool CheckIfIgnored(PropertyInfo propertyInfo)
         {
