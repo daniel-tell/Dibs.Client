@@ -16,45 +16,19 @@ namespace DIBS.Client
 
         private string GenereatePostMessage()
         {
-            string message = "";
-
             PropertyInfo[] propertyInfos = GetType().GetProperties();
 
-            var propertiesWithFixedNames = propertyInfos
+            var message = propertyInfos
                 .Where(x => !CheckIfIgnored(x))
                 .ToDictionary(k => k, FixCasing)
-                .OrderBy(x => x.Value, StringComparer.Ordinal);
-
-            //SortPropertiesByName(propertyInfos.ToArray());
-
-            foreach (KeyValuePair<PropertyInfo, string> propertyPair in propertiesWithFixedNames)
-            {
-
-                    message += "&" + propertyPair.Value + "=" + propertyPair.Key.GetValue(this);
-
-            }
+                .OrderBy(x => x.Value, StringComparer.Ordinal)
+                .Aggregate("", (current, propertyPair) => current + ("&" + propertyPair.Value + "=" + propertyPair.Key.GetValue(this)));
 
             if (message.Length > 0)
                 message = message.TrimStart('&');
 
             return message;
         }
-
-        //private static void SortPropertiesByName(Dictionary<PropertyInfo, string> propertyPairs)
-        //{
-            
-            
-        //    Array.Sort(propertyPairs,
-        //               (propertyInfo1, propertyInfo2) =>
-        //               String.Compare(propertyInfo1, propertyInfo2, StringComparison.Ordinal));
-        //}
-
-        //private static void SortPropertiesByName(PropertyInfo[] propertyInfos)
-        //{
-        //    Array.Sort(propertyInfos,
-        //               (propertyInfo1, propertyInfo2) =>
-        //               String.Compare(propertyInfo1.Name, propertyInfo2.Name, StringComparison.Ordinal));
-        //}
 
         private bool CheckIfIgnored(PropertyInfo propertyInfo)
         {
